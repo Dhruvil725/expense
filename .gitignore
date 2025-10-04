@@ -1,0 +1,8 @@
+*.pyc
+*.pyo
+__pycache__/
+.env
+*.log
+.idea/
+.vscode/
+odoo/addons/*/static/lib/
