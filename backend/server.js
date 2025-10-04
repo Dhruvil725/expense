@@ -25,7 +25,7 @@ app.use('/expense-submission', expenseSubmissionRoutes);
 app.use('/approval-rules', approvalRulesRoutes);
 app.use('/approvals', approvalsRoutes);
 
-// Add this function at the top after your other functions
+// Currency conversion function
 const convertCurrency = async (amount, fromCurrency, toCurrency) => {
   if (fromCurrency === toCurrency) return amount;
 
@@ -40,7 +40,7 @@ const convertCurrency = async (amount, fromCurrency, toCurrency) => {
   }
 };
 
-// Add this function to check approval rules
+// Approval rules checking function
 const checkApprovalRules = (expenseId) => {
   return new Promise((resolve, reject) => {
     db.all('SELECT * FROM approvals WHERE expense_id = ? ORDER BY sequence_order', [expenseId], (err, approvals) => {
@@ -142,7 +142,7 @@ const checkApprovalRules = (expenseId) => {
   });
 };
 
-// ADD THIS ROUTE - Get approval rules (currently missing)
+// Get approval rules
 app.get('/approval-rules', authenticateToken, (req, res) => {
   if (req.user.role !== 'Admin') {
     return res.status(403).json({ error: 'Access denied' });
@@ -171,7 +171,7 @@ app.get('/approval-rules', authenticateToken, (req, res) => {
   });
 });
 
-// ADD THIS ROUTE - Get team expenses for managers (currently missing)
+// Get team expenses for managers
 app.get('/approvals/team', authenticateToken, (req, res) => {
   const { status, startDate, endDate } = req.query;
 
@@ -237,8 +237,7 @@ app.get('/approvals/team', authenticateToken, (req, res) => {
   });
 });
 
-// UPDATE THIS ROUTE - Add currency conversion to pending approvals
-// Replace your existing /approvals/pending route with this:
+// Get pending approvals with currency conversion
 app.get('/approvals/pending', authenticateToken, (req, res) => {
   const query = `
     SELECT
@@ -294,6 +293,7 @@ app.get('/approvals/pending', authenticateToken, (req, res) => {
   });
 });
 
+// Update approval status
 app.put('/approvals/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { status, comments } = req.body;
@@ -340,8 +340,7 @@ app.put('/approvals/:id', authenticateToken, (req, res) => {
   );
 });
 
-// UPDATE THIS ROUTE - Add filters support for employee expenses
-// Replace your existing GET /expense-submission route with this:
+// Get employee expenses with approval trail
 app.get('/expense-submission', authenticateToken, (req, res) => {
   const { status, startDate, endDate } = req.query;
 

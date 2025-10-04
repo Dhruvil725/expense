@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRole } = require('../middleware/auth');
+const axios = require('axios');
 
 const router = express.Router();
 
@@ -19,7 +20,6 @@ router.get('/pending', authenticateToken, authorizeRole(['Manager', 'Admin']), a
     if (err) return res.status(500).json({ error: err.message });
 
     // Add currency conversion for each expense
-    const axios = require('axios');
     for (let row of rows) {
       if (row.original_currency !== row.company_currency) {
         try {
@@ -65,7 +65,6 @@ router.get('/team', authenticateToken, authorizeRole(['Manager']), async (req, r
     if (err) return res.status(500).json({ error: err.message });
 
     // Add currency conversion for each expense
-    const axios = require('axios');
     for (let row of rows) {
       if (row.original_currency !== row.company_currency) {
         try {

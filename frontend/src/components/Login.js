@@ -21,6 +21,15 @@ const Login = ({ onLogin }) => {
     setLoading(false);
   };
 
+  const handleSignUpClick = () => {
+    const code = prompt('Enter special code:');
+    if (code === 'SPEC1234') {
+      navigate('/signup');
+    } else {
+      alert('Invalid special code.');
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center">
       <form onSubmit={handleSubmit} className="page-container">
@@ -41,6 +50,13 @@ const Login = ({ onLogin }) => {
         />
         <button type="submit" disabled={loading}>
           {loading ? 'Logging in...' : 'Login'}
+        </button>
+        <button
+          type="button"
+          onClick={handleSignUpClick}
+          className="mt-4 bg-blue-500 text-white py-2 px-4 rounded"
+        >
+          Sign Up
         </button>
       </form>
     </div>

@@ -1,24 +1,30 @@
 const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRole } = require('../middleware/auth');
+const currencyService = require('../services/currencyservices');
 
 const router = express.Router();
 
 // Submit expense
-router.post('/', authenticateToken, authorizeRole(['Employee']), (req, res) => {
+router.post('/', authenticateToken, authorizeRole(['Employee']), async (req, res) => {
   const { amount, original_currency, category, description, expense_date } = req.body;
   if (!amount || !original_currency || !description || !expense_date) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
-  db.run('INSERT INTO expenses (employee_id, company_id, amount, original_currency, category, description, expense_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [req.user.id, req.user.company_id, amount, original_currency, category || '', description, expense_date, 'Pending'], function(err) {
-    if (err) return res.status(500).json({ error: err.message });
-    // Create approvals based on rules
-    createApprovals(this.lastID, req.user.company_id, req.user.id);
-    // Notify admin and manager about new expense
-    notifyAdminAndManager(this.lastID, req.user.company_id, req.user.id);
-    res.json({ id: this.lastID });
-  });
+  try {
+    const convertedAmount = await currencyService.convertToBaseCurrency(amount, original_currency);
+    db.run('INSERT INTO expenses (employee_id, company_id, amount, original_currency, category, description, expense_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [req.user.id, req.user.company_id, convertedAmount, original_currency, category || '', description, expense_date, 'Pending'], function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      // Create approvals based on rules
+      createApprovals(this.lastID, req.user.company_id, req.user.id);
+      // Notify admin and manager about new expense
+      notifyAdminAndManager(this.lastID, req.user.company_id, req.user.id);
+      res.json({ id: this.lastID });
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Currency conversion failed' });
+  }
 });
 
 function notifyAdminAndManager(expenseId, companyId, employeeId) {
